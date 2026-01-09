@@ -260,13 +260,14 @@ class Strategy:
   
   def check_race(self, state, action, scheduled_only = False, grades: list[str] = None):
     date = state["year"]
-    if config.DO_MISSION_RACES_IF_POSSIBLE and state["race_mission_available"]:
-      debug(f"Mission race logic in check_race: {action.available_actions}")
-      action.available_actions.insert(0, "do_race")
-      action["race_name"] = "any"
-      action["race_image_path"] = "assets/ui/match_track.png"
-      action["prioritize_missions_over_g1"] = config.PRIORITIZE_MISSIONS_OVER_G1
-      action["race_mission_available"] = True
+    if not scheduled_only:
+      if config.DO_MISSION_RACES_IF_POSSIBLE and state["race_mission_available"]:
+        debug(f"Mission race logic in check_race: {action.available_actions}")
+        action.available_actions.insert(0, "do_race")
+        action["race_name"] = "any"
+        action["race_image_path"] = "assets/ui/match_track.png"
+        action["prioritize_missions_over_g1"] = config.PRIORITIZE_MISSIONS_OVER_G1
+        action["race_mission_available"] = True
 
     if grades is not None:
       races_on_date = [r for r in constants.RACES[date] if r.get("grade") in grades]
