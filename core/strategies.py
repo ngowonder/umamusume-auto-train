@@ -154,13 +154,10 @@ class Strategy:
       action["is_race_day"] = False
 
     # Check for scheduled races
-    scheduled_race_action = self.check_race(state, action, scheduled_only=True)
+    action = self.check_race(state, action, scheduled_only=True)
 
-    # If a scheduled race was found, update the action with the scheduled race data
-    if "do_race" in scheduled_race_action.available_actions and scheduled_race_action.get("scheduled_race", False):
-        action = scheduled_race_action
-        action.func = "do_race"
-        action["year"] = state["year"]
+    # If a scheduled race was found, return action
+    if "do_race" in action.available_actions and action.get("scheduled_race", False):
         info(f"Using scheduled race on Race Day: {action['race_name']}")
         return action
 
