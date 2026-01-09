@@ -1,7 +1,7 @@
 import core.trainings
 import utils.constants as constants
 import core.config as config
-from core.state import check_status_effects
+from core.state import check_status_effects, collect_training_state
 from core.actions import Action
 from core.recognizer import compare_brightness
 from utils.log import error, warning, info, debug
@@ -41,9 +41,6 @@ class Strategy:
 
     action = self.get_action(state, training_template, action)
 
-    action["energy_level"] = state["energy_level"]
-    action["training_function"] = training_template["training_function"]
-
     if "scheduled_race" in action.options and action["scheduled_race"]:
       info(f"Scheduled race found: {action['race_name']}")
       action.func = "do_race"
@@ -51,6 +48,9 @@ class Strategy:
       info(f"Action function: {action.func}")
       info(f"Action: {action}")
       return action
+
+    action["energy_level"] = state["energy_level"]
+    action["training_function"] = training_template["training_function"]
 
     if action.available_actions:
       debug(f"Available actions: {action.available_actions}")
@@ -132,6 +132,7 @@ class Strategy:
     training_function_name = training_template['training_function']
     info(f"Selected training: {training_function_name}")
 
+    # Get training strategy
     training_type = getattr(core.trainings, training_function_name)
 
     action = self.get_action_by_sequence(state, action_sequence, training_type, training_template, action)
@@ -151,6 +152,20 @@ class Strategy:
       return action
     else:
       action["is_race_day"] = False
+
+    # Check for scheduled races
+    scheduled_race_action = self.check_race(state, action, scheduled_only=True)
+
+    # If a scheduled race was found, update the action with the scheduled race data
+    if "do_race" in scheduled_race_action.available_actions and scheduled_race_action.get("scheduled_race", False):
+        action = scheduled_race_action
+        action.func = "do_race"
+        action["year"] = state["year"]
+        info(f"Using scheduled race on Race Day: {action['race_name']}")
+        return action
+
+    # Enter training and collect state
+    state = collect_training_state(state)
 
     info(f"Evaluating action sequence: {action_sequence}")
 
@@ -379,7 +394,7 @@ class Strategy:
         if skip_wit_for_other_training:
           action.func = "do_training"
           for training_name, training_data in available_trainings.items():
-            if training == "wit":
+            if training_name == "wit":
               continue
             else:
               action["training_name"] = training_name

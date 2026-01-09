@@ -251,6 +251,7 @@ def collect_state(config):
       filter_race_schedule(state_object)
       device_action.locate_and_click("assets/buttons/close_btn.png", min_search_time=get_secs(1), region_ltrb=constants.SCREEN_BOTTOM_BBOX)
 
+  """ NOTE collect_training_state() -> import into strategies.py and call in get_action_by_sequence()
   if device_action.locate_and_click("assets/buttons/training_btn.png", min_search_time=get_secs(5), region_ltrb=constants.SCREEN_BOTTOM_BBOX):
     training_results = CleanDefaultDict()
     sleep(0.25)
@@ -277,8 +278,38 @@ def collect_state(config):
     training_results = filter_training_lock(training_results)
     device_action.locate_and_click("assets/buttons/back_btn.png", min_search_time=get_secs(1), region_ltrb=constants.SCREEN_BOTTOM_BBOX)
     state_object["training_results"] = training_results
+  """
 
   debug(f"State object: {state_object}")
+  return state_object
+
+def collect_training_state(state_object):
+  if device_action.locate_and_click("assets/buttons/training_btn.png", min_search_time=get_secs(5), region_ltrb=constants.SCREEN_BOTTOM_BBOX):
+    training_results = CleanDefaultDict()
+    sleep(0.25)
+    for name, mouse_pos in constants.TRAINING_BUTTON_POSITIONS.items():
+      # swipe up to avoid clicking on the training button again.
+      device_action.swipe(mouse_pos, (mouse_pos[0], mouse_pos[1] + 150), duration=0.1)
+      sleep(0.15)
+      if args.debug is not None and args.debug > 11:
+        from utils.debug_tools import compare_training_samples
+        test_results = []
+        for i in range(10):
+          test_results.append(get_training_data(year=state_object["year"]))
+          test_results.append(get_support_card_data())
+        equal, info = compare_training_samples(test_results)
+
+        if not equal:
+          debug("Training samples diverged")
+          debug(info)
+      training_results[name].update(get_training_data(year=state_object["year"]))
+      training_results[name].update(get_support_card_data())
+
+    debug(f"Training results: {training_results}")
+
+    training_results = filter_training_lock(training_results)
+    device_action.locate_and_click("assets/buttons/back_btn.png", min_search_time=get_secs(1), region_ltrb=constants.SCREEN_BOTTOM_BBOX)
+    state_object["training_results"] = training_results
   return state_object
 
 def filter_training_lock(training_results):
