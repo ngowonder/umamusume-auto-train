@@ -158,7 +158,7 @@ class Strategy:
 
     # If a scheduled race was found, return action
     if "do_race" in action.available_actions and action.get("scheduled_race", False):
-        info(f"Using scheduled race on Race Day: {action['race_name']}")
+        info(f"Using scheduled race: {action['race_name']}")
         return action
 
     # Enter training and collect state
