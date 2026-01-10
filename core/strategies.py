@@ -74,7 +74,7 @@ class Strategy:
           action.available_actions.append("do_rest")
 
       if action.func != "do_race":
-        if "Early Jun" in state["year"] or "Late Jun" in state["year"]:
+        if ("Early Jun" in state["year"] or "Late Jun" in state["year"]) and "Junior" not in state["year"]:
           if state["turn"] != "Race Day" and state["energy_level"] < config.REST_BEFORE_SUMMER_ENERGY:
             action.func = "do_rest"
             info(f"Resting before summer: {state['energy_level']} < {config.REST_BEFORE_SUMMER_ENERGY}")
