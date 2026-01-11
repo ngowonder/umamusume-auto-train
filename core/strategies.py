@@ -25,6 +25,7 @@ class Strategy:
     first_filter_done = False 
 
   def decide(self, state):
+    #TODO: add support for last 3 turns not being wasted by resting
     debug(f"Starting decision for turn {state.get('turn', 'unknown')} in {state['year']}")
     #check if state is valid otherwise return no_action
     action = Action()
@@ -189,11 +190,6 @@ class Strategy:
         if state["date_event_available"]:
           action.func = "do_recreation"
           action.available_actions.append("do_recreation")
-
-        # add support for last 2 turns not being wasted by resting
-        elif state["year"] == "Finale Underway" and ("semifinal" in state["criteria"] or "finals" in state["criteria"]):
-          action = self.evaluate_training_alternatives(state, action)
-
         else:
           action.func = "do_rest"
           action.available_actions.append("do_rest")
